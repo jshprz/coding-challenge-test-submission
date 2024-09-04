@@ -16,6 +16,8 @@ code {
 */
 
 :root {
+  --font-primary: 'Roboto', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Oxygen', 'Ubuntu',
+    'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
   --border-radius-default: 4px;
   --border-radius-xl: 15px;
   --color-accent: #cacfdd;
@@ -24,8 +26,8 @@ code {
   --color-brand: #413ef7;
   --color-text: #141925;
   --color-text-light: #72787d;
-  --width-input: 20rem;
-  --width-content: 30rem;
+  --width-input: 100%;
+  --width-content: 100%;
 }
 
 * {
@@ -33,19 +35,22 @@ code {
 }
 
 body {
-  accent-color: var(--color-brand);
-  font-size: 18px;
+  margin: 0;
   font-family: var(--font-primary);
+  font-size: 16px;
   background: var(--color-accent);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  accent-color: var(--color-brand);
 }
 
 main {
-  padding: 2rem;
+  padding: 1rem;
 }
 
 small {
   font-weight: normal;
-  font-size: 0.65em;
+  font-size: 0.75em;
   color: var(--color-text-light);
 }
 
@@ -53,12 +58,41 @@ fieldset {
   border: none;
   border-bottom: 1px solid var(--color-accent);
   border-top: 1px solid var(--color-accent);
-  margin: 2rem 0;
-  max-width: var(--width-input);
+  margin: 1rem 0;
+  max-width: 100%;
   padding: 1rem 0;
   width: 100%;
 }
 
 legend {
   color: var(--color-text-light);
+}
+
+@media (min-width: 600px) {
+  :root {
+    --width-input: 20rem;
+    --width-content: 30rem;
+  }
+
+  fieldset {
+    max-width: var(--width-input);
+  }
+
+  main {
+    padding: 2rem;
+  }
+
+  body {
+    font-size: 18px;
+  }
+}
+
+@media (min-width: 1024px) {
+  main {
+    padding: 3rem;
+  }
+
+  body {
+    font-size: 20px;
+  }
 }

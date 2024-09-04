@@ -7,9 +7,10 @@ import InputText from "@/components/InputText/InputText";
 import Radio from "@/components/Radio/Radio";
 import Section from "@/components/Section/Section";
 import useAddressBook from "@/hooks/useAddressBook";
-
+import useFormFields from "@/hooks/useFormFields";
 import styles from "./App.module.css";
 import { Address as AddressType } from "./types";
+import transformAddress from "./core/models/address";
 
 function App() {
   /**
@@ -20,39 +21,31 @@ function App() {
    * - Remove all individual React.useState
    * - Remove all individual onChange handlers, like handlePostCodeChange for example
    */
-  const [postCode, setPostCode] = React.useState("");
-  const [houseNumber, setHouseNumber] = React.useState("");
-  const [firstName, setFirstName] = React.useState("");
-  const [lastName, setLastName] = React.useState("");
-  const [selectedAddress, setSelectedAddress] = React.useState("");
+  const initialFieldValues = {
+    postCode: "",
+    houseNumber: "",
+    firstName: "",
+    lastName: "",
+    selectedAddress: "",
+  };
+
+  const { formFields, handleFieldChange, clearFields } = useFormFields(
+    initialFieldValues
+  );
+
+  const { postCode, houseNumber, firstName, lastName, selectedAddress } = formFields;
+
   /**
    * Results states
    */
   const [error, setError] = React.useState<undefined | string>(undefined);
   const [addresses, setAddresses] = React.useState<AddressType[]>([]);
+  const [loading, setLoading] = React.useState(false);
+
   /**
    * Redux actions
    */
   const { addAddress } = useAddressBook();
-
-  /**
-   * Text fields onChange handlers
-   */
-  const handlePostCodeChange = (e: React.ChangeEvent<HTMLInputElement>) =>
-    setPostCode(e.target.value);
-
-  const handleHouseNumberChange = (e: React.ChangeEvent<HTMLInputElement>) =>
-    setHouseNumber(e.target.value);
-
-  const handleFirstNameChange = (e: React.ChangeEvent<HTMLInputElement>) =>
-    setFirstName(e.target.value);
-
-  const handleLastNameChange = (e: React.ChangeEvent<HTMLInputElement>) =>
-    setLastName(e.target.value);
-
-  const handleSelectedAddressChange = (
-    e: React.ChangeEvent<HTMLInputElement>
-  ) => setSelectedAddress(e.target.value);
 
   /** TODO: Fetch addresses based on houseNumber and postCode using the local BE api
    * - Example URL of API: ${process.env.NEXT_PUBLIC_URL}/api/getAddresses?postcode=1345&streetnumber=350
@@ -65,6 +58,35 @@ function App() {
    */
   const handleAddressSubmit = async (e: React.ChangeEvent<HTMLFormElement>) => {
     e.preventDefault();
+  
+    setAddresses([]);
+    setError(undefined);
+  
+    setLoading(true);
+  
+    try {
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_URL}/api/getAddresses?postcode=${postCode}&streetnumber=${houseNumber}`
+      );
+  
+      if (!response.ok) {
+        const errorData = await response.json();
+        setError(errorData.errormessage || 'Failed to fetch addresses');
+        return;
+      }
+  
+      const data = await response.json();
+  
+      const transformedAddresses = data.details.map((address: AddressType) =>
+        transformAddress(address, houseNumber)
+      );
+  
+      setAddresses(transformedAddresses);
+    } catch (err) {
+      setError('An error occurred while fetching addresses. Please try again.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   /** TODO: Add basic validation to ensure first name and last name fields aren't empty
@@ -89,7 +111,18 @@ function App() {
       return;
     }
 
+    if (!firstName || !lastName) {
+      setError("First name and last name fields mandatory!");
+      return;
+    }
+
     addAddress({ ...foundAddress, firstName, lastName });
+  };
+
+  const handleClearFields = () => {
+    clearFields();
+    setAddresses([]);
+    setError(undefined);
   };
 
   return (
@@ -109,7 +142,7 @@ function App() {
             <div className={styles.formRow}>
               <InputText
                 name="postCode"
-                onChange={handlePostCodeChange}
+                onChange={handleFieldChange}
                 placeholder="Post Code"
                 value={postCode}
               />
@@ -117,12 +150,14 @@ function App() {
             <div className={styles.formRow}>
               <InputText
                 name="houseNumber"
-                onChange={handleHouseNumberChange}
+                onChange={handleFieldChange}
                 value={houseNumber}
                 placeholder="House number"
               />
             </div>
-            <Button type="submit">Find</Button>
+            <Button type="submit" loading={loading}>
+              Find
+            </Button>
           </fieldset>
         </form>
         {addresses.length > 0 &&
@@ -132,7 +167,7 @@ function App() {
                 name="selectedAddress"
                 id={address.id}
                 key={address.id}
-                onChange={handleSelectedAddressChange}
+                onChange={handleFieldChange}
               >
                 <Address {...address} />
               </Radio>
@@ -147,7 +182,7 @@ function App() {
                 <InputText
                   name="firstName"
                   placeholder="First name"
-                  onChange={handleFirstNameChange}
+                  onChange={handleFieldChange}
                   value={firstName}
                 />
               </div>
@@ -155,7 +190,7 @@ function App() {
                 <InputText
                   name="lastName"
                   placeholder="Last name"
-                  onChange={handleLastNameChange}
+                  onChange={handleFieldChange}
                   value={lastName}
                 />
               </div>
@@ -173,6 +208,9 @@ function App() {
         On Click, it must clear all form fields, remove all search results and clear all prior
         error messages
         */}
+        <Button onClick={handleClearFields}>
+          Clear all fields
+        </Button>
       </Section>
 
       <Section variant="dark">

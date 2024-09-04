@@ -1,5 +1,7 @@
 // DO NOT MODIFY
 
+import { Address } from "@/types";
+
 export interface AddressModel {
   city: string;
   firstName: string;
@@ -15,7 +17,7 @@ export interface RawAddressModel extends AddressModel {
   lon: string;
 }
 
-export default function transformAddress(data: RawAddressModel): AddressModel {
+export default function transformAddress(address: Address, data: RawAddressModel): AddressModel {
   const { firstName, lastName, city, houseNumber, lat, lon, postcode, street } =
     data;
   return {

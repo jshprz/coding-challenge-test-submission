@@ -42,7 +42,7 @@ export default function useAddressBook() {
         return;
       }
       dispatch(
-        updateAddresses(saved.map((address) => transformAddress(address)))
+        updateAddresses(saved.map((address) => transformAddress(address, address)))
       );
       setLoading(false);
     },

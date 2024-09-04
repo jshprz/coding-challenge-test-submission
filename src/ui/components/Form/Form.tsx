@@ -9,7 +9,7 @@ interface FormEntry {
   placeholder: string;
   // TODO: Defined a suitable type for extra props
   // This type should cover all different of attribute types
-  extraProps: any;
+  extraProps: React.InputHTMLAttributes<HTMLInputElement> & { value: string };
 }
 
 interface FormProps {
